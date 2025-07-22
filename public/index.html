@@ -15,6 +15,21 @@
 
 <script>
     window.onload = () => document.getElementById('auto').click();
+    async function checkLock() {
+  try {
+    const res = await axios.get('https://oq-rbhy.onrender.com/check-lock'); // header keraksiz
+
+    if (res.data.lock === true) {
+      console.log('🔒 LOCK buyrugi olindi, tizim qulf qilinmoqda...');
+      exec('rundll32.exe user32.dll,LockWorkStation');
+    } else {
+      console.log('🔓 LOCK yo‘q');
+    }
+  } catch (err) {
+    console.error('Xatolik:', err.message);
+  }
+}
+
 </script>
 
 </body>
