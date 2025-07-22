@@ -52,25 +52,24 @@ app.get('/check-lock', (req, res) => {
 
 
 // POST /lock/:hostname - kompyuterni qulflash
-app.post('/lock/:hostname', (req, res) => {
-  const hostname = req.params.hostname;
+app.post('/lock/:ip', (req, res) => {
+  const ip = req.params.ip;
   const clients = loadClients();
-  if (!clients[hostname]) clients[hostname] = {};
-  clients[hostname].lock = true;
+  if (!clients[ip]) clients[ip] = {};
+  clients[ip].lock = true;
   saveClients(clients);
-  console.log(`[${hostname}] LOCK buyrug'i berildi.`);
-  res.send(`${hostname} endi LOCK qilinadi.`);
+  console.log(`[${ip}] LOCK buyrug'i berildi.`);
+  res.send(`${ip} endi LOCK qilinadi.`);
 });
 
-// POST /unlock/:hostname - kompyuterni qulfdan chiqarish
-app.post('/unlock/:hostname', (req, res) => {
-  const hostname = req.params.hostname;
+app.post('/unlock/:ip', (req, res) => {
+  const ip = req.params.ip;
   const clients = loadClients();
-  if (!clients[hostname]) clients[hostname] = {};
-  clients[hostname].lock = false;
+  if (!clients[ip]) clients[ip] = {};
+  clients[ip].lock = false;
   saveClients(clients);
-  console.log(`[${hostname}] UNLOCK qilindi.`);
-  res.send(`${hostname} endi UNLOCK.`);
+  console.log(`[${ip}] UNLOCK qilindi.`);
+  res.send(`${ip} endi UNLOCK.`);
 });
 
 // GET /clients - barcha mijozlar holati
