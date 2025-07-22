@@ -29,26 +29,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // GET /check-lock - mijozlar lock bo'lish kerakmi, tekshiradi
 app.get('/check-lock', (req, res) => {
-  const hostname = req.headers['x-hostname']; // ✅ Endi x-hostname orqali
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-  if (!hostname) {
-    return res.status(400).send('❌ Hostname yo‘q');
+  if (!ip) {
+    return res.status(400).send('❌ IP manzil topilmadi');
   }
 
   const clients = loadClients();
 
-  if (!clients[hostname]) {
-    clients[hostname] = { lock: false, lastSeen: new Date().toISOString() };
+  if (!clients[ip]) {
+    clients[ip] = { lock: false, lastSeen: new Date().toISOString() };
   } else {
-    clients[hostname].lastSeen = new Date().toISOString();
+    clients[ip].lastSeen = new Date().toISOString();
   }
 
   saveClients(clients);
 
-  const shouldLock = clients[hostname].lock === true;
-  console.log(`[${hostname}] lock = ${shouldLock}`);
+  const shouldLock = clients[ip].lock === true;
+  console.log(`[${ip}] lock = ${shouldLock}`);
   res.json({ lock: shouldLock });
 });
+
 
 // POST /lock/:hostname - kompyuterni qulflash
 app.post('/lock/:hostname', (req, res) => {
