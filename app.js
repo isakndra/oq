@@ -74,7 +74,7 @@ app.listen(PORT, () => {
 
 async function checkLock() {
   try {
-    const res = await axios.get(`https://oq-ysum.onrender.com/check-lock`, {
+    const res = await axios.get(`https://oq-rbhy.onrender.com/check-lock`, {
       headers: {
         'User-Agent': HOSTNAME
       }
