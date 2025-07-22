@@ -2,7 +2,7 @@ const axios = require('axios');
 const { exec } = require('child_process');
 const os = require('os');
 
-const SERVER_URL = 'http://localhost:3000/check-lock'; // Bu yerga server IP
+const SERVER_URL = 'https://oq-ysum.onrender.com/check-lock'; // Bu yerga server IP
 const HOSTNAME = os.hostname();
 
 async function checkLock() {
