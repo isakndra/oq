@@ -1,3 +1,4 @@
+// ==== KERAKLI MODULLAR ====
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -10,10 +11,7 @@ const PORT = 3000;
 const CLIENTS_FILE = path.join(__dirname, 'clients.json');
 const HOSTNAME = os.hostname(); // Client hostname
 
-// ==== SERVER QISMI ====
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// ==== FUNKSIYALAR ====
 
 function loadClients() {
   if (!fs.existsSync(CLIENTS_FILE)) return {};
@@ -24,8 +22,19 @@ function saveClients(data) {
   fs.writeFileSync(CLIENTS_FILE, JSON.stringify(data, null, 2));
 }
 
+// ==== SERVER QISMI ====
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// GET /check-lock - mijozlar lock bo'lish kerakmi, tekshiradi
 app.get('/check-lock', (req, res) => {
-  const hostname = req.headers['user-agent'];
+  const hostname = req.headers['x-hostname']; // ✅ Endi x-hostname orqali
+
+  if (!hostname) {
+    return res.status(400).send('❌ Hostname yo‘q');
+  }
+
   const clients = loadClients();
 
   if (!clients[hostname]) {
@@ -41,6 +50,7 @@ app.get('/check-lock', (req, res) => {
   res.json({ lock: shouldLock });
 });
 
+// POST /lock/:hostname - kompyuterni qulflash
 app.post('/lock/:hostname', (req, res) => {
   const hostname = req.params.hostname;
   const clients = loadClients();
@@ -51,6 +61,7 @@ app.post('/lock/:hostname', (req, res) => {
   res.send(`${hostname} endi LOCK qilinadi.`);
 });
 
+// POST /unlock/:hostname - kompyuterni qulfdan chiqarish
 app.post('/unlock/:hostname', (req, res) => {
   const hostname = req.params.hostname;
   const clients = loadClients();
@@ -61,13 +72,16 @@ app.post('/unlock/:hostname', (req, res) => {
   res.send(`${hostname} endi UNLOCK.`);
 });
 
+// GET /clients - barcha mijozlar holati
 app.get('/clients', (req, res) => {
   const clients = loadClients();
   res.json(clients);
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server http://localhost:${PORT} da ishlayapti`);
+// GET /refresh - server tirikligini tekshirish
+app.get('/refresh', (req, res) => {
+  console.log(`[HEALTH CHECK] ${new Date().toLocaleTimeString()} - Server hali tirik`);
+  res.send('Server tirik ✅');
 });
 
 // ==== CLIENT QISMI ====
@@ -76,7 +90,7 @@ async function checkLock() {
   try {
     const res = await axios.get(`https://oq-rbhy.onrender.com/check-lock`, {
       headers: {
-        'User-Agent': HOSTNAME
+        'x-hostname': HOSTNAME // ✅ Endi maxsus header yuborilyapti
       }
     });
 
@@ -84,18 +98,17 @@ async function checkLock() {
       console.log('🔒 LOCK buyrugi olindi, tizim qulf qilinmoqda...');
       exec('rundll32.exe user32.dll,LockWorkStation');
     } else {
-      console.log('🔓 LOCK yoq');
+      console.log('🔓 LOCK yo‘q');
     }
   } catch (err) {
     console.error('Xatolik:', err.message);
   }
 }
 
-app.get('/refresh', (req, res) => {
-  console.log(`[HEALTH CHECK] ${new Date().toLocaleTimeString()} - Server hali tirik`);
-  res.send('Server tirik ✅');
-});
-
-
-// Har 5 sekundda tekshiradi
+// Har 5 soniyada lock holatini tekshiradi
 setInterval(checkLock, 5000);
+
+// ==== SERVERNI YURITISH ====
+app.listen(PORT, () => {
+  console.log(`✅ Server http://localhost:${PORT} da ishlayapti`);
+});
